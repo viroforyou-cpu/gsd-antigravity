@@ -1,0 +1,112 @@
+# GeneReason - Docker Compose Configuration
+# Usage: docker-compose up -d
+# For local development with mock data: docker-compose up -d
+
+version: '3.8'
+
+services:
+  # ===========================================
+  # Frontend Service
+  # ===========================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:8000
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - genereason-network
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # ===========================================
+  # Backend Service
+  # ===========================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_ENV=production
+      - CORS_ORIGINS=["http://localhost", "http://localhost:80", "http://localhost:5173"]
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-dev-secret-key-change-in-production}
+      - SUPABASE_URL=${SUPABASE_URL:-}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:-}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:-}
+      - DATABASE_URL=${DATABASE_URL:-}
+      - LLM_API_URL=${LLM_API_URL:-https://open.bigmodel.cn/api/paas/v4}
+      - LLM_API_KEY=${LLM_API_KEY:-}
+      - LLM_MODEL=${LLM_MODEL:-glm-4-plus}
+      - FALKORDB_HOST=redis
+      - FALKORDB_PORT=6379
+      - USE_MOCK_DATA=${USE_MOCK_DATA:-true}
+      - USE_MOCK_LLM=${USE_MOCK_LLM:-true}
+      - USE_MOCK_GRAPH=${USE_MOCK_GRAPH:-true}
+      - REQUIRE_AUTH=${REQUIRE_AUTH:-false}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - LOG_FORMAT=json
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - genereason-network
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8000/health').raise_for_status()" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # ===========================================
+  # Redis (for FalkorDB and caching)
+  # ===========================================
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - genereason-network
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    command: redis-server --appendonly yes
+  # ===========================================
+  # FalkorDB (Graph Database)
+  # Uncomment when ready to use
+  # ===========================================
+  # falkordb:
+  #   image: falkordb/falkordb:latest
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - falkordb-data:/data
+  #   networks:
+  #     - genereason-network
+  #   restart: unless-stopped
+  #   environment:
+  #     - FALKORDB_ARGS=--save 60 1000
+
+networks:
+  genereason-network:
+    driver: bridge
+
+volumes:
+  redis-data: # falkordb-data:

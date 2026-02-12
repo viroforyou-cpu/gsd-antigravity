@@ -1,0 +1,69 @@
+# GeneReason - Development Docker Compose Configuration
+# Usage: docker-compose -f docker-compose.dev.yml up -d
+
+version: '3.8'
+
+services:
+  # ===========================================
+  # Redis (for FalkorDB and caching)
+  # ===========================================
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-dev-data:/data
+    networks:
+      - genereason-dev-network
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    command: redis-server --appendonly yes
+
+  # ===========================================
+  # PostgreSQL (for local development)
+  # ===========================================
+  postgres:
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=genereason
+      - POSTGRES_PASSWORD=genereason_dev_password
+      - POSTGRES_DB=genereason
+    volumes:
+      - postgres-dev-data:/var/lib/postgresql/data
+    networks:
+      - genereason-dev-network
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U genereason -d genereason" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ===========================================
+  # Adminer (Database UI - optional)
+  # ===========================================
+  adminer:
+    image: adminer:latest
+    ports:
+      - "8080:8080"
+    networks:
+      - genereason-dev-network
+    restart: unless-stopped
+    depends_on:
+      - postgres
+
+networks:
+  genereason-dev-network:
+    driver: bridge
+
+volumes:
+  redis-dev-data:
+  postgres-dev-data:

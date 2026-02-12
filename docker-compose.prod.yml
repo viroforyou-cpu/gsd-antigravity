@@ -1,0 +1,143 @@
+# GeneReason - Production Docker Compose
+# Use this for production deployment with all services
+
+version: '3.8'
+
+services:
+  # ========================================
+  # Frontend (React + Vite)
+  # ========================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - backend
+    networks:
+      - genereason-network
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ========================================
+  # Backend (FastAPI)
+  # ========================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    ports:
+      - "8002:8002"
+    environment:
+      - APP_ENV=production
+      - DATABASE_URL=postgresql://genereason:${DB_PASSWORD}@postgres:5432/genereason
+      - REDIS_URL=redis://redis:6379/0
+      - FALKORDB_HOST=graph-db
+      - FALKORDB_PORT=6379
+    env_file:
+      - ./backend/.env.production
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - genereason-network
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8002/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ========================================
+  # PostgreSQL Database
+  # ========================================
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=genereason
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=genereason
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./backend/app/core/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+    networks:
+      - genereason-network
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U genereason" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ========================================
+  # Redis Cache
+  # ========================================
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis-data:/data
+    networks:
+      - genereason-network
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ========================================
+  # FalkorDB (Graph Database)
+  # ========================================
+  graph-db:
+    image: falkordb/falkordb:latest
+    environment:
+      - FALKORDB_ARGS=--save 60 1000
+    volumes:
+      - graph-data:/data
+    networks:
+      - genereason-network
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "redis-cli", "-p", "6379", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ========================================
+  # Nginx Reverse Proxy (Optional - for SSL termination)
+  # ========================================
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - genereason-network
+    restart: unless-stopped
+
+networks:
+  genereason-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  redis-data:
+  graph-data:

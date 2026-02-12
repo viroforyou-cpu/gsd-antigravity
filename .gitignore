@@ -1,0 +1,117 @@
+# ===========================================
+# Node.js
+# ===========================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ===========================================
+# Build outputs
+# ===========================================
+dist/
+build/
+*.local
+
+# ===========================================
+# Python
+# ===========================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+*.egg
+.venv/
+venv/
+ENV/
+env/
+
+# ===========================================
+# IDE and editors
+# ===========================================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+*.sublime-workspace
+*.sublime-project
+
+# ===========================================
+# Environment files
+# ===========================================
+.env
+.env.local
+.env.*.local
+!.env.example
+!.env.production.example
+
+# ===========================================
+# Logs
+# ===========================================
+logs/
+*.log
+
+# ===========================================
+# OS generated files
+# ===========================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# ===========================================
+# Testing
+# ===========================================
+coverage/
+.nyc_output/
+*.lcov
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ===========================================
+# Docker
+# ===========================================
+docker-compose.override.yml
+
+# ===========================================
+# Misc
+# ===========================================
+*.bak
+*.tmp
+*.temp
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+
+# ===========================================
+# AI/Agent files
+# ===========================================
+.agent/
+.claude/
+.gemini/
+.gsd/
+
+# ===========================================
+# Documentation build
+# ===========================================
+docs/_build/
+
+# ===========================================
+# Playwright
+# ===========================================
+playwright-report/
+test-results/
+playwright/.cache/
