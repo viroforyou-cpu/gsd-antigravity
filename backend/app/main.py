@@ -22,6 +22,11 @@ from .api.routes.progress import router as progress_router
 from .api.routes.llm import router as llm_router
 from .api.routes.graph import router as graph_router
 from .api.routes.auth import router as auth_router
+from .api.routes.review import router as review_router
+from .api.routes.bookmarks import router as bookmarks_router
+from .api.routes.study_plans import router as study_plans_router
+from .api.routes.tutor import router as tutor_router
+from .api.routes.admin import router as admin_router
 from .services.cache_service import cache_service
 
 
@@ -189,6 +194,11 @@ app.include_router(reasoning_router, prefix="/api/v1")
 app.include_router(progress_router, prefix="/api/v1")
 app.include_router(llm_router, prefix="/api/v1")
 app.include_router(graph_router, prefix="/api/v1")
+app.include_router(review_router, prefix="/api/v1")
+app.include_router(bookmarks_router, prefix="/api/v1")
+app.include_router(study_plans_router, prefix="/api/v1")
+app.include_router(tutor_router, prefix="/api/v1")
+app.include_router(admin_router, prefix="/api/v1")
 
 
 @app.get("/")
@@ -207,6 +217,9 @@ async def root():
             "progress": "/api/v1/progress",
             "llm": "/api/v1/llm",
             "graph": "/api/v1/graph",
+            "review": "/api/v1/review",
+            "bookmarks": "/api/v1/bookmarks",
+            "study-plans": "/api/v1/study-plans",
         },
     }
 

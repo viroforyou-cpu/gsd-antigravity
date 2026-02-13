@@ -1,20 +1,35 @@
+import { useState } from 'react';
 import type { AssociationReasoning, AllReasoningResult } from '../../types/reasoning';
+import type { GraphNode, KnowledgeGraph as KnowledgeGraphType } from '../../types/graph';
+import { KnowledgeGraph } from '../graph';
+import { mockGraphs } from '../../mock/graphs';
 
 interface AssociationViewProps {
     reasoning: AllReasoningResult;
     correctAnswer: string;
+    questionId?: string;
 }
 
 function isAssociationReasoning(reasoning: AllReasoningResult): reasoning is AssociationReasoning {
     return reasoning.strategy === 'association';
 }
 
-export function AssociationView({ reasoning, correctAnswer }: AssociationViewProps) {
+export function AssociationView({ reasoning, correctAnswer, questionId }: AssociationViewProps) {
+    const [showGraph, setShowGraph] = useState(true);
+    const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
+
     if (!isAssociationReasoning(reasoning)) {
         return <div className="p-4 text-gray-500">Invalid reasoning type for association view</div>;
     }
 
     const { steps, conclusion, confidence, key_findings, linked_conditions } = reasoning;
+
+    // Get the knowledge graph for this question
+    const graph: KnowledgeGraphType | undefined = questionId ? mockGraphs[questionId] : undefined;
+
+    const handleNodeClick = (node: GraphNode) => {
+        setSelectedNode(node);
+    };
 
     return (
         <div className="space-y-6">
@@ -49,6 +64,43 @@ export function AssociationView({ reasoning, correctAnswer }: AssociationViewPro
                     ))}
                 </div>
             </div>
+
+            {/* Knowledge Graph Visualization */}
+            {graph && (
+                <div>
+                    <div className="flex items-center justify-between mb-3">
+                        <h4 className="text-sm font-medium text-gray-700">Knowledge Graph</h4>
+                        <button
+                            onClick={() => setShowGraph(!showGraph)}
+                            className="text-sm text-primary-600 hover:text-primary-700 flex items-center gap-1"
+                        >
+                            {showGraph ? (
+                                <>
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                    Hide Graph
+                                </>
+                            ) : (
+                                <>
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                    </svg>
+                                    Show Graph
+                                </>
+                            )}
+                        </button>
+                    </div>
+                    {showGraph && (
+                        <KnowledgeGraph
+                            graph={graph}
+                            height={400}
+                            highlightNode={selectedNode?.id}
+                            onNodeClick={handleNodeClick}
+                        />
+                    )}
+                </div>
+            )}
 
             {/* Reasoning Steps */}
             <div>

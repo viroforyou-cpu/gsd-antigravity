@@ -5,6 +5,7 @@ Supports both mock responses and real GLM-4.7 API calls.
 from typing import List, Optional, Dict, Any
 from abc import ABC, abstractmethod
 import json
+import random
 import httpx
 from datetime import datetime
 import asyncio
@@ -65,7 +66,6 @@ class MockLLMService(LLMServiceInterface):
         category_questions = self._mock_questions.get(category, [])
         
         if category_questions:
-            import random
             return random.choice(category_questions)
         
         # Return a generic mock question

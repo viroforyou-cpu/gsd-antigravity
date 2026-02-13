@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { ProtectedRoute } from './components/auth';
+import { ProtectedRoute, AdminRoute } from './components/auth';
 import { useAuthStore } from './stores/authStore';
 import { authService } from './services/authService';
 import { LoadingSpinner } from './components/common';
@@ -9,12 +9,20 @@ import { LoadingSpinner } from './components/common';
 const Dashboard = lazy(() => import('./pages/Dashboard').then(m => ({ default: m.Dashboard })));
 const PracticeSession = lazy(() => import('./pages/PracticeSession').then(m => ({ default: m.PracticeSession })));
 const SessionReview = lazy(() => import('./pages/SessionReview').then(m => ({ default: m.SessionReview })));
+const ReviewQueue = lazy(() => import('./pages/ReviewQueue').then(m => ({ default: m.ReviewQueue })));
+const Bookmarks = lazy(() => import('./pages/Bookmarks').then(m => ({ default: m.Bookmarks })));
 const History = lazy(() => import('./pages/History').then(m => ({ default: m.History })));
 const Settings = lazy(() => import('./pages/Settings').then(m => ({ default: m.Settings })));
 const Login = lazy(() => import('./pages/Login').then(m => ({ default: m.Login })));
 const Register = lazy(() => import('./pages/Register').then(m => ({ default: m.Register })));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword').then(m => ({ default: m.ForgotPassword })));
 const Profile = lazy(() => import('./pages/Profile').then(m => ({ default: m.Profile })));
+const StudyPlanList = lazy(() => import('./components/study-plan/StudyPlanList').then(m => ({ default: m.StudyPlanList })));
+const StudyPlanCreate = lazy(() => import('./components/study-plan/StudyPlanCreate').then(m => ({ default: m.StudyPlanCreate })));
+const StudyPlanDetail = lazy(() => import('./components/study-plan/StudyPlanDetail').then(m => ({ default: m.StudyPlanDetail })));
+// Admin pages
+const AdminPanel = lazy(() => import('./pages/AdminPanel'));
+const AdminUsers = lazy(() => import('./pages/AdminUsers'));
 
 // Loading fallback component
 function PageLoader() {
@@ -79,6 +87,16 @@ function App() {
               <SessionReview />
             </ProtectedRoute>
           } />
+          <Route path="/review-queue" element={
+            <ProtectedRoute>
+              <ReviewQueue />
+            </ProtectedRoute>
+          } />
+          <Route path="/bookmarks" element={
+            <ProtectedRoute>
+              <Bookmarks />
+            </ProtectedRoute>
+          } />
           <Route path="/history" element={
             <ProtectedRoute>
               <History />
@@ -93,6 +111,33 @@ function App() {
             <ProtectedRoute>
               <Profile />
             </ProtectedRoute>
+          } />
+          <Route path="/study-plans" element={
+            <ProtectedRoute>
+              <StudyPlanList />
+            </ProtectedRoute>
+          } />
+          <Route path="/study-plans/create" element={
+            <ProtectedRoute>
+              <StudyPlanCreate />
+            </ProtectedRoute>
+          } />
+          <Route path="/study-plans/:planId" element={
+            <ProtectedRoute>
+              <StudyPlanDetail />
+            </ProtectedRoute>
+          } />
+
+          {/* Admin routes */}
+          <Route path="/admin" element={
+            <AdminRoute>
+              <AdminPanel />
+            </AdminRoute>
+          } />
+          <Route path="/admin/users" element={
+            <AdminRoute>
+              <AdminUsers />
+            </AdminRoute>
           } />
 
           {/* Catch-all redirect */}

@@ -13,6 +13,9 @@ redis>=5.0.0
 fakeredis>=2.20.0
 falkordb>=1.4.0
 
+# Temporal Knowledge Graph (Zep/Graphiti compatible)
+zep-python>=2.0.0
+
 # Authentication
 python-jose[cryptography]>=3.3.0
 passlib[bcrypt]>=1.7.4

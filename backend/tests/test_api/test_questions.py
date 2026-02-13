@@ -44,7 +44,8 @@ class TestQuestionsAPI:
 
     def test_get_question_not_found(self, client: TestClient):
         """Test getting a non-existent question."""
-        response = client.get("/api/v1/questions/nonexistent-id")
+        # Use a valid UUID format that doesn't exist
+        response = client.get("/api/v1/questions/00000000-0000-0000-0000-000000000000")
 
         assert response.status_code == 404
 

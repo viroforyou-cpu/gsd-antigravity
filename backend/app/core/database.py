@@ -65,9 +65,6 @@ def get_engine():
         # Performance settings
         echo=settings.log_level == "DEBUG",
         echo_pool=False,  # Don't log pool events
-        # Optimizations
-        executemany_mode='values',  # Batch insert optimization
-        executemany_values_page_size=1000,  # Batch size for inserts
     )
     
     return _engine

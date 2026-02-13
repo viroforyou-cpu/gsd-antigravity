@@ -10,22 +10,31 @@ const renderWithRouter = (ui: React.ReactElement, { route = '/' } = {}) => {
     return render(ui, { wrapper: BrowserRouter });
 };
 
+// Mock auth store to avoid issues with authentication state
+vi.mock('../../stores/authStore', () => ({
+    useAuthStore: vi.fn(() => ({
+        user: null,
+        isAuthenticated: false,
+        logout: vi.fn(),
+    })),
+}));
+
 describe('Header', () => {
     describe('rendering', () => {
         it('renders default title', () => {
-            render(<Header />);
+            renderWithRouter(<Header />);
 
             expect(screen.getByText('GeneReason')).toBeInTheDocument();
         });
 
         it('renders custom title', () => {
-            render(<Header title="Custom Title" />);
+            renderWithRouter(<Header title="Custom Title" />);
 
             expect(screen.getByText('Custom Title')).toBeInTheDocument();
         });
 
         it('renders children', () => {
-            render(
+            renderWithRouter(
                 <Header>
                     <button>Test Button</button>
                 </Header>
@@ -37,20 +46,20 @@ describe('Header', () => {
 
     describe('menu button', () => {
         it('does not show menu button by default', () => {
-            render(<Header />);
+            renderWithRouter(<Header />);
 
             expect(screen.queryByLabelText('Toggle menu')).not.toBeInTheDocument();
         });
 
         it('shows menu button when showMenuButton is true', () => {
-            render(<Header showMenuButton={true} />);
+            renderWithRouter(<Header showMenuButton={true} />);
 
             expect(screen.getByLabelText('Toggle menu')).toBeInTheDocument();
         });
 
         it('calls onMenuClick when menu button is clicked', () => {
             const onMenuClick = vi.fn();
-            render(<Header showMenuButton={true} onMenuClick={onMenuClick} />);
+            renderWithRouter(<Header showMenuButton={true} onMenuClick={onMenuClick} />);
 
             fireEvent.click(screen.getByLabelText('Toggle menu'));
             expect(onMenuClick).toHaveBeenCalled();

@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback, useRef, useMemo } from 'react';
 
 interface KeyboardShortcut {
     key: string;
@@ -12,20 +12,58 @@ interface KeyboardShortcut {
 
 /**
  * Hook for handling keyboard shortcuts
+ * Uses stable serialization to prevent unnecessary re-renders
  */
 export function useKeyboardShortcuts(shortcuts: KeyboardShortcut[]) {
+    // Serialize shortcuts to detect actual changes
+    const serializedShortcuts = useMemo(() =>
+        JSON.stringify(shortcuts.map(s => ({
+            key: s.key,
+            ctrl: s.ctrl,
+            shift: s.shift,
+            alt: s.alt,
+            meta: s.meta,
+        }))),
+        [shortcuts]
+    );
+
+    // Store handlers in a ref to avoid stale closures
+    const handlersRef = useRef<Map<string, () => void>>(new Map());
+
+    useEffect(() => {
+        // Update handlers map
+        handlersRef.current.clear();
+        shortcuts.forEach(s => {
+            const key = [
+                s.key.toLowerCase(),
+                s.ctrl ? 'ctrl' : '',
+                s.shift ? 'shift' : '',
+                s.alt ? 'alt' : '',
+                s.meta ? 'meta' : '',
+            ].filter(Boolean).join('+');
+            handlersRef.current.set(key, s.handler);
+        });
+    }, [shortcuts, serializedShortcuts]);
+
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
-            for (const shortcut of shortcuts) {
-                const keyMatch = event.key.toLowerCase() === shortcut.key.toLowerCase();
-                const ctrlMatch = !shortcut.ctrl || event.ctrlKey;
-                const shiftMatch = !shortcut.shift || event.shiftKey;
-                const altMatch = !shortcut.alt || event.altKey;
-                const metaMatch = !shortcut.meta || event.metaKey;
+            for (const [key, handler] of handlersRef.current) {
+                const parts = key.split('+');
+                const eventKey = parts[0];
+                const hasCtrl = parts.includes('ctrl');
+                const hasShift = parts.includes('shift');
+                const hasAlt = parts.includes('alt');
+                const hasMeta = parts.includes('meta');
+
+                const keyMatch = event.key.toLowerCase() === eventKey;
+                const ctrlMatch = !hasCtrl || event.ctrlKey;
+                const shiftMatch = !hasShift || event.shiftKey;
+                const altMatch = !hasAlt || event.altKey;
+                const metaMatch = !hasMeta || event.metaKey;
 
                 if (keyMatch && ctrlMatch && shiftMatch && altMatch && metaMatch) {
                     event.preventDefault();
-                    shortcut.handler();
+                    handler();
                     break;
                 }
             }
@@ -33,7 +71,7 @@ export function useKeyboardShortcuts(shortcuts: KeyboardShortcut[]) {
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [shortcuts]);
+    }, [serializedShortcuts]);
 }
 
 /**

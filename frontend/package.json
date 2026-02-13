@@ -19,14 +19,16 @@
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.1.18",
+    "@types/dagre": "^0.7.53",
     "axios": "^1.13.5",
     "clsx": "^2.1.1",
+    "dagre": "^0.8.5",
     "lucide-react": "^0.563.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-markdown": "^10.1.0",
     "react-router-dom": "^7.13.0",
-    "reaflow": "^5.4.1",
+    "reactflow": "^11.11.4",
     "zustand": "^5.0.11"
   },
   "devDependencies": {

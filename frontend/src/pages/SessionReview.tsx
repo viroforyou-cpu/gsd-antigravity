@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { Layout } from '../components/layout';
 import { Card, CardBody, Button } from '../components/common';
@@ -67,14 +67,17 @@ export function SessionReview() {
     }
 
     const { questions, answers, sessionId, accuracy: apiAccuracy } = state;
-    const correctCount = answers.filter(a => a.isCorrect).length;
-    const accuracy = apiAccuracy ?? Math.round((correctCount / answers.length) * 100);
+    const correctCount = useMemo(() => answers.filter(a => a.isCorrect).length, [answers]);
+    const accuracy = useMemo(() =>
+        apiAccuracy ?? Math.round((correctCount / answers.length) * 100),
+        [apiAccuracy, correctCount, answers.length]
+    );
 
-    const toggleQuestion = (questionId: string) => {
-        setExpandedQuestion(expandedQuestion === questionId ? null : questionId);
-    };
+    const toggleQuestion = useCallback((questionId: string) => {
+        setExpandedQuestion(prev => prev === questionId ? null : questionId);
+    }, []);
 
-    const getReasoningForViewer = (questionId: string) => {
+    const getReasoningForViewer = useCallback((questionId: string) => {
         // First check if we have API reasoning
         if (apiReasoning[questionId]) {
             return {
@@ -91,7 +94,7 @@ export function SessionReview() {
             constraints: getReasoningByStrategy(questionId, 'constraints') as AllReasoningResult | undefined,
             arguments: getReasoningByStrategy(questionId, 'arguments') as AllReasoningResult | undefined,
         };
-    };
+    }, [apiReasoning]);
 
     return (
         <Layout title="Session Review">

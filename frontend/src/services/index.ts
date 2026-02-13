@@ -37,3 +37,31 @@ export type {
     PasswordResetData,
     PasswordResetConfirmData
 } from './authService';
+export { bookmarkService } from './bookmarkService';
+export type {
+    Bookmark,
+    BookmarkWithQuestion,
+    BookmarkList,
+    TagStats,
+    BookmarkCreate,
+    BookmarkUpdate
+} from './bookmarkService';
+export { reviewService } from './reviewService';
+export type {
+    SpacedRepetitionData,
+    ReviewQuestion,
+    ReviewQueue,
+    ReviewSubmit,
+    ReviewResult,
+    SRSStats,
+    PreviewResult
+} from './reviewService';
+export { studyPlanService } from './studyPlanService';
+export type {
+    StudyPlan,
+    StudyPlanCreate,
+    StudyPlanUpdate,
+    StudyPlanSummary,
+    StudyPlanProgress,
+    PlanStatus
+} from '../types/studyPlan';

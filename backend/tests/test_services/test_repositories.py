@@ -61,7 +61,8 @@ class TestQuestionRepository:
     @pytest.mark.asyncio
     async def test_get_by_id_returns_none_for_invalid_id(self, repository):
         """Test that get_by_id returns None for invalid ID."""
-        question = await repository.get_by_id('invalid-id-12345')
+        # Use a valid UUID format that doesn't exist in the database
+        question = await repository.get_by_id('00000000-0000-0000-0000-000000000000')
         assert question is None
 
     @pytest.mark.asyncio
@@ -129,7 +130,8 @@ class TestSessionRepository:
     @pytest.mark.asyncio
     async def test_get_by_id_returns_none_for_invalid_id(self, repository):
         """Test that get_by_id returns None for invalid ID."""
-        session = await repository.get_by_id('invalid-session-id')
+        # Use a valid UUID format that doesn't exist in the database
+        session = await repository.get_by_id('00000000-0000-0000-0000-000000000000')
         assert session is None
 
     @pytest.mark.asyncio
@@ -140,7 +142,7 @@ class TestSessionRepository:
         session = await repository.create(session_create)
         
         # Submit an answer
-        question_id = session.questions[0].id
+        question_id = session.questions[0].question.id
         answer = SessionAnswer(
             question_id=question_id,
             answer='A',
@@ -148,8 +150,8 @@ class TestSessionRepository:
         
         updated_session = await repository.submit_answer(session.id, answer)
         assert updated_session is not None
-        assert question_id in updated_session.answers
-        assert updated_session.answers[question_id] == 'A'
+        # Check that the first question has the user_answer set
+        assert updated_session.questions[0].user_answer == 'A'
 
     @pytest.mark.asyncio
     async def test_complete_session(self, repository):
@@ -159,9 +161,9 @@ class TestSessionRepository:
         session = await repository.create(session_create)
         
         # Answer all questions
-        for question in session.questions:
+        for session_question in session.questions:
             answer = SessionAnswer(
-                question_id=question.id,
+                question_id=session_question.question.id,
                 answer='A',
             )
             await repository.submit_answer(session.id, answer)
@@ -179,9 +181,9 @@ class TestSessionRepository:
         session = await repository.create(session_create)
         
         # Answer questions
-        for question in session.questions:
+        for session_question in session.questions:
             answer = SessionAnswer(
-                question_id=question.id,
+                question_id=session_question.question.id,
                 answer='A',
             )
             await repository.submit_answer(session.id, answer)
@@ -193,4 +195,4 @@ class TestSessionRepository:
         assert review is not None
         assert 'session' in review
         assert 'questions' in review
-        assert 'summary' in review
+        assert 'stats' in review

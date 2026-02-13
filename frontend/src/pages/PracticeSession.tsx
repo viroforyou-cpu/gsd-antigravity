@@ -1,13 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '../components/layout';
 import { Card, CardBody, Button, KeyboardHintsPanel, StepProgress } from '../components/common';
 import { QuestionDisplay, OptionSelector } from '../components/question';
+import { TutorPanel } from '../components/tutor';
 import { useLetterKeySelection, useKeyboardShortcuts } from '../hooks';
-import { sessionService } from '../services';
+import { sessionService, studyPlanService } from '../services';
+import { useTutorStore } from '../stores';
 import { mockQuestions } from '../mock/questions'; // Fallback for offline mode
 import type { Question, AnswerKey } from '../types/question';
 import type { SessionResponse } from '../services/sessionService';
+import type { StudyPlanSummary, DailyTask } from '../types/studyPlan';
 
 type SessionState = 'setup' | 'loading' | 'active' | 'completing' | 'error';
 
@@ -56,7 +59,44 @@ export function PracticeSession() {
     const [questionCount, setQuestionCount] = useState<number>(5);
     const [useApi, setUseApi] = useState<boolean>(true); // Toggle for API vs mock mode
 
+    // Study plan integration
+    const [activePlans, setActivePlans] = useState<StudyPlanSummary[]>([]);
+    const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+    const [todayTask, setTodayTask] = useState<DailyTask | null>(null);
+
     const categories = ['all', 'Lysosomal Storage Disorders', 'Chromosomal Abnormalities', 'Inherited Metabolic Disorders', 'Muscular Disorders'];
+
+    // Load active study plans on mount
+    useEffect(() => {
+        loadActivePlans();
+    }, []);
+
+    const loadActivePlans = async () => {
+        try {
+            const plans = await studyPlanService.getPlans('active');
+            setActivePlans(plans);
+        } catch (err) {
+            console.error('Failed to load study plans:', err);
+        }
+    };
+
+    // Load today's task when a plan is selected
+    useEffect(() => {
+        if (selectedPlanId) {
+            loadTodayTask(selectedPlanId);
+        }
+    }, [selectedPlanId]);
+
+    const loadTodayTask = async (planId: string) => {
+        try {
+            const today = new Date().toISOString().split('T')[0];
+            const tasks = await studyPlanService.getPlanTasks(planId, today, today);
+            const practiceTask = tasks.find(t => t.task_type === 'practice_questions' && t.status === 'pending');
+            setTodayTask(practiceTask || null);
+        } catch (err) {
+            console.error('Failed to load today task:', err);
+        }
+    };
 
     const startSession = async () => {
         setSessionState('loading');
@@ -125,6 +165,20 @@ export function PracticeSession() {
             } catch (err) {
                 console.error('Failed to submit answer to API:', err);
                 // Continue anyway - local state is updated
+            }
+        }
+
+        // Increment task progress if connected to a study plan
+        if (selectedPlanId && todayTask) {
+            try {
+                const updatedTask = await studyPlanService.incrementTaskProgress(
+                    selectedPlanId,
+                    todayTask.id,
+                    1
+                );
+                setTodayTask(updatedTask);
+            } catch (err) {
+                console.error('Failed to increment task progress:', err);
             }
         }
 
@@ -264,6 +318,33 @@ export function PracticeSession() {
                                     ))}
                                 </select>
                             </div>
+
+                            {/* Study Plan Selection */}
+                            {activePlans.length > 0 && (
+                                <div className="mb-6 p-4 bg-blue-50 rounded-lg">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Connect to Study Plan (Optional)
+                                    </label>
+                                    <select
+                                        value={selectedPlanId || ''}
+                                        onChange={(e) => setSelectedPlanId(e.target.value || null)}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                                        disabled={sessionState === 'loading'}
+                                    >
+                                        <option value="">No plan selected</option>
+                                        {activePlans.map(plan => (
+                                            <option key={plan.id} value={plan.id}>
+                                                {plan.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {todayTask && (
+                                        <p className="text-xs text-gray-600 mt-2">
+                                            📝 Progress: {todayTask.completed_count}/{todayTask.target_count} questions today
+                                        </p>
+                                    )}
+                                </div>
+                            )}
 
                             {/* Question Count */}
                             <div className="mb-6">
@@ -448,6 +529,9 @@ export function PracticeSession() {
                     )}
                 </div>
             </div>
+
+            {/* AI Tutor Panel */}
+            <TutorPanel />
         </Layout>
     );
 }

@@ -930,36 +930,39 @@ volumes:
 ## 9. Development Phases
 
 ### Phase 1: Foundation
-- [ ] Set up project structure and Docker environment
-- [ ] Implement basic FastAPI backend
-- [ ] Set up Supabase connection and schema
-- [ ] Set up FalkorDB connection
-- [ ] Implement GLM-4.7 API integration
+- [x] Set up project structure and Docker environment
+- [x] Implement basic FastAPI backend
+- [x] Set up Supabase connection and schema
+- [x] Set up FalkorDB connection
+- [x] Implement GLM-4.7 API integration
 
 ### Phase 2: Question Generation
-- [ ] Build document ingestion pipeline
-- [ ] Implement question generation with GLM-4.7
-- [ ] Create question storage and retrieval
-- [ ] Build basic practice interface
+- [x] Build document ingestion pipeline
+- [x] Implement question generation with GLM-4.7
+- [x] Create question storage and retrieval
+- [x] Build basic practice interface
 
 ### Phase 3: Knowledge Graph
-- [ ] Implement graph extraction from questions
-- [ ] Store graphs in FalkorDB
-- [ ] Build graph visualization component
-- [ ] Implement association-based reasoning
+- [x] Implement graph extraction from questions
+- [x] Store graphs in FalkorDB
+- [x] Build graph visualization component
+- [x] Implement association-based reasoning
 
 ### Phase 4: Multi-Strategy Reasoning
-- [ ] Implement hypothetico-deductive reasoning
-- [ ] Implement constraint satisfaction reasoning
-- [ ] Implement argument-based reasoning
-- [ ] Build reasoning comparison UI
+- [x] Implement hypothetico-deductive reasoning
+- [x] Implement constraint satisfaction reasoning
+- [x] Implement argument-based reasoning
+- [x] Build reasoning comparison UI
 
 ### Phase 5: Polish and Integration
-- [ ] Add progress tracking
+- [x] Add progress tracking
 - [ ] Implement Graphiti for temporal graphs
-- [ ] Add user settings and preferences
+- [x] Add user settings and preferences
+- [x] Add spaced repetition system (SRS)
+- [x] Add bookmarking functionality
+- [x] Add study plans feature
 - [ ] Performance optimization
-- [ ] Testing and refinement
+- [x] Testing and refinement (in progress)
 
 ---
 
